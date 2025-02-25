@@ -1,8 +1,15 @@
+import 'dart:core';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-const String dbName = 'ab_database.db';
-const String accountDbTableName = 'account_table';
+const String chainDbName = 'chain_db_name.db';
+// user表
+const String userTableName = 'network_table_name';
+// 记录表
+const String recordTableName  = 'node_table_name';
+// 图片表
+const String imageTableName = 'token_table_name';
 
 class DBHelper {
   static Database? _database; // 使用问号表示可能为null
@@ -17,43 +24,40 @@ class DBHelper {
   // 初始化数据库
   static Future<Database> _initDatabase() async {
     // 获取数据库文件的路径
-    String path = join(await getDatabasesPath(), dbName);
+    String path = join(await getDatabasesPath(), chainDbName);
     // 打开数据库
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-          CREATE TABLE $accountDbTableName (
-            `address` varchar(32) NULL ,
-            `keystore` text NULL ,
-            `name` varchar(255) NULL ,
-            `privateKey` varchar(64) NULL ,
-            `mnemonic` varchar(255) NULL ,
-            `createdAt` varchar(255) NULL ,
-            `isDefault` int NULL DEFAULT 0 ,
-            `isEncryption` int NULL DEFAULT 0 ,
-            `extension` longtext NULL ,
-            CONSTRAINT `isDefault` CHECK (isDefault IN (0, 1)),
-            CONSTRAINT `isEncryption` CHECK (isEncryption IN (0, 1))
-          )
+        CREATE TABLE "$userTableName" (
+        "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
+        "name" TEXT,
+        "positions" TEXT,
+        "time" INTEGER NOT NULL DEFAULT 0,
+        )
+        ''');
+
+        await db.execute('''
+        CREATE TABLE "$recordTableName" (
+        "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
+        "time" INTEGER NOT NULL DEFAULT 0,
+        "userId" INTEGER NOT NULL,
+        "imageId" INTEGER NOT NULL,
+        "startTime" TEXT,
+        "endTime" TEXT,
+        )
+        ''');
+
+        await db.execute('''
+        CREATE TABLE "$imageTableName" (
+        "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
+        "body" MEDIUMBLOB NOT NULL,
+        "recordId" INTEGER NOT NULL,
+        )
         ''');
         return ;
-
-        // // 创建表的SQL语句
-        // return db.execute('''
-        //   CREATE TABLE $accountDbTableName (
-        //     address TEXT,
-        //     keystore TEXT,
-        //     name TEXT,
-        //     privateKey TEXT,
-        //     mnemonic TEXT,
-        //     extension TEXT,
-        //     createdAt TEXT,
-        //     isDefault INTEGER DEFAULT 0 CHECK (isDefault IN (0, 1)),
-        //     isEncryption INTEGER DEFAULT 0 CHECK (isEncryption IN (0, 1))
-        //   )
-        // ''');
       },
     );
   }
@@ -92,4 +96,12 @@ class DBHelper {
       _database = null; // 重置单例
     }
   }
+
+
+  // 执行事务
+  static Future<T> executeTransaction<T>(Future<T> Function(Transaction txn) action, {bool? exclusive}) async {
+    final db = await database;
+    return db.transaction(action, exclusive: exclusive);
+  }
+
 }
