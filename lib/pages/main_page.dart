@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:statistics_app/pages/employee_list_page.dart';
 
 import '../provider/theme_provider.dart';
 import '../utils/my_assets.dart';
@@ -40,7 +41,7 @@ class _MainPageState extends State<MainPage> {
               });
             },
             children: [
-              Container(),
+              EmployeeListPage(),
               Container(),
             ]),
         bottomNavigationBar: Theme(

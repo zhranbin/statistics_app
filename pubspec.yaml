@@ -19,7 +19,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.6.2
+  # sdk: ^3.6.2
+  sdk: ^3.5.4
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -46,8 +47,9 @@ dependencies:
   # 下拉刷新
   easy_refresh: ^3.4.0
   # 扫一扫
-  scan: ^1.6.0
+  # scan: ^1.6.0
   image_picker: ^0.8.5+3
+  flutter_slidable: ^3.1.2
 
 dev_dependencies:
   flutter_test:
