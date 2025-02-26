@@ -14,6 +14,16 @@ class UserManager {
     return users.reversed.toList();
   }
 
+  // 获取用户（通过id）
+  static Future<UserModel?> getUser(int id) async {
+    List<Map<String, dynamic>> result = await DBHelper.query(userTableName, where: 'id = $id');
+    if (result.isNotEmpty) {
+      return UserModel.fromJson(result.first);
+    }
+    await DBHelper.close();
+    return null;
+  }
+
   // 添加用户
   static Future<int> addUser(UserModel user) async {
     int id = await DBHelper.insert(userTableName, user.getAddJson());
