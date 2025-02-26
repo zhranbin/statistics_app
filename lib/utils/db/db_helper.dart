@@ -3,13 +3,13 @@ import 'dart:core';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-const String chainDbName = 'chain_db_name.db';
+const String dataDbName = 'data_db_name.db';
 // user表
-const String userTableName = 'network_table_name';
+const String userTableName = 'user_table_name';
 // 记录表
-const String recordTableName  = 'node_table_name';
+const String recordTableName  = 'record_table_name';
 // 图片表
-const String imageTableName = 'token_table_name';
+const String imageTableName = 'image_table_name';
 
 class DBHelper {
   static Database? _database; // 使用问号表示可能为null
@@ -24,7 +24,7 @@ class DBHelper {
   // 初始化数据库
   static Future<Database> _initDatabase() async {
     // 获取数据库文件的路径
-    String path = join(await getDatabasesPath(), chainDbName);
+    String path = join(await getDatabasesPath(), dataDbName);
     // 打开数据库
     return await openDatabase(
       path,
@@ -35,7 +35,7 @@ class DBHelper {
         "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
         "name" TEXT,
         "positions" TEXT,
-        "time" INTEGER NOT NULL DEFAULT 0,
+        "time" INTEGER NOT NULL DEFAULT 0
         )
         ''');
 
@@ -46,7 +46,7 @@ class DBHelper {
         "userId" INTEGER NOT NULL,
         "imageId" INTEGER NOT NULL,
         "startTime" TEXT,
-        "endTime" TEXT,
+        "endTime" TEXT
         )
         ''');
 
@@ -54,7 +54,7 @@ class DBHelper {
         CREATE TABLE "$imageTableName" (
         "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
         "body" MEDIUMBLOB NOT NULL,
-        "recordId" INTEGER NOT NULL,
+        "recordId" INTEGER NOT NULL
         )
         ''');
         return ;

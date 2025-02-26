@@ -49,8 +49,8 @@ dependencies:
   # 扫一扫
   # scan: ^1.6.0
   image_picker: ^0.8.5+3
-  flutter_slidable: ^3.1.2
-  
+#  flutter_slidable: ^3.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

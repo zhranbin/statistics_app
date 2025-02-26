@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:statistics_app/model/user_model.dart';
+import 'package:statistics_app/utils/db/user_manager.dart';
 
 class Employee {
   String name;
@@ -15,10 +16,99 @@ class EmployeeListPage extends StatefulWidget {
 }
 
 class _EmployeeListPageState extends State<EmployeeListPage> {
-  List<Employee> employees = [
-    Employee(name: '张三', position: '经理', hoursOff: 10),
-    Employee(name: '李四', position: '开发', hoursOff: -5),
-  ];
+  List<UserModel> users = [];
+
+
+  @override
+  void initState() {
+    _loadUsers();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('员工列表'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: _addEmployee,
+          ),
+        ],
+      ),
+      body: ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final user = users[index];
+            return Dismissible(
+              key: Key('${user.id}'),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (direction) async {
+                final isDelete = await showDialog(context: context, builder: (BuildContext context){
+                  return AlertDialog(
+                    title: Text('删除确认'),
+                    content: Text('确定要删除该员工吗？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                        },
+                        child: Text('取消'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(true);
+                        },
+                        child: Text('确定'),
+                      )
+                    ]
+                  );
+                });
+                return isDelete == true;
+              },
+              onDismissed: (direction) async {
+                await UserManager.deleteUser(user.id);
+                _loadUsers();
+              },
+              child: ListTile(
+                title: Text(
+                  user.name,
+                  style: TextStyle(fontSize: 16),
+                ),
+                subtitle: Text(
+                  user.positions,
+                  style: TextStyle(fontSize: 14),
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      user.time >= 0
+                          ? '+${user.time}小时'
+                          : '${user.time}小时',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color:
+                        user.time >= 0 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                onLongPress: () => _editUser(user),
+                onTap: () => _viewDetails(user),
+              ),
+            );
+          }),
+    );
+  }
+
+
+  Future<void> _loadUsers() async {
+    users = await UserManager.getUserList();
+    setState(() {});
+  }
+
 
   void _addEmployee() {
     showDialog(
@@ -44,9 +134,13 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
             TextButton(
               onPressed: () {
                 if (name.isNotEmpty && position.isNotEmpty) {
-                  setState(() {
-                    employees.add(Employee(name: name, position: position));
-                  });
+                  UserModel user = UserModel(
+                      name: name,
+                      positions: position,
+                      time: 0
+                  );
+                  UserManager.addUser(user);
+                  _loadUsers();
                   Navigator.pop(context);
                 }
               },
@@ -58,12 +152,11 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
     );
   }
 
-  void _editEmployee(Employee employee) {
-    String name = employee.name;
-    String position = employee.position;
+  void _editUser(UserModel user) {
+    String name = user.name;
+    String position = user.positions;
     TextEditingController nameController = TextEditingController(text: name);
-    TextEditingController positionController =
-        TextEditingController(text: position);
+    TextEditingController positionController = TextEditingController(text: position);
 
     showDialog(
       context: context,
@@ -86,11 +179,11 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                setState(() {
-                  employee.name = name;
-                  employee.position = position;
-                });
+              onPressed: () async {
+                user.name = name;
+                user.positions = position;
+                await UserManager.updateUser(user);
+                setState(() {});
                 Navigator.pop(context);
               },
               child: Text('保存'),
@@ -101,144 +194,20 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
     );
   }
 
-  void _viewDetails(Employee employee) {
+  void _viewDetails(UserModel user) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EmployeeDetailsPage(employee: employee),
+        builder: (context) => EmployeeDetailsPage(employee: user),
       ),
     );
   }
 
-  // void _deleteEmployee(int index) {
-  //   setState(() {
-  //     employees.removeAt(index);
-  //   });
-  // }
 
-  _deleteEmployee(BuildContext context, int index) {
-    // 这个函数在触发时什么都不做。
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   setState(() {
-    //     employees.removeAt(index);
-    //   });
-    // });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('员工列表'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _addEmployee,
-          ),
-        ],
-      ),
-      body: ListView.builder(
-          itemCount: employees.length,
-          itemBuilder: (context, index) {
-            final employee = employees[index];
-            return Slidable(
-              // Specify a key if the Slidable is dismissible.
-              // key: const ValueKey(0),
-              // The end action pane is the one at the right or the bottom side.
-              endActionPane: ActionPane(
-                motion: const ScrollMotion(),
-                children: [
-                  SlidableAction(
-                    onPressed: _deleteEmployee(context, index),
-                    backgroundColor: Color(0xFFFE4A49),
-                    foregroundColor: Colors.white,
-                    icon: Icons.delete,
-                    label: 'Delete',
-                  )
-                ],
-              ),
-
-              // The child of the Slidable is what the user sees when the
-              // component is not dragged.
-              child: ListTile(
-                title: Text(
-                  employee.name,
-                  style: TextStyle(fontSize: 16),
-                ),
-                subtitle: Text(
-                  employee.position,
-                  style: TextStyle(fontSize: 14),
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      employee.hoursOff >= 0
-                          ? '+${employee.hoursOff}小时'
-                          : '${employee.hoursOff}小时',
-                      style: TextStyle(
-                        fontSize: 24,
-                        color:
-                            employee.hoursOff >= 0 ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-                onLongPress: () => _editEmployee(employee),
-              ),
-            );
-          }),
-      // body: ListView.builder(
-      //   itemCount: employees.length,
-      //   itemBuilder: (context, index) {
-      //     final employee = employees[index];
-      //     return Dismissible(
-      //       key: Key(employee.name),
-      //       direction: DismissDirection.endToStart,
-      //       onDismissed: (direction) {
-      //         // 在这里不直接删除，改为显示删除按钮
-      //       },
-      //       background: Container(
-      //         color: Colors.red,
-      //         alignment: Alignment.centerRight,
-      //         padding: EdgeInsets.symmetric(horizontal: 20),
-      //         child: Icon(Icons.delete, color: Colors.white),
-      //       ),
-      //       child: ListTile(
-      //         title: Text(
-      //           employee.name,
-      //           style: TextStyle(fontSize: 16),
-      //         ),
-      //         subtitle: Text(
-      //           employee.position,
-      //           style: TextStyle(fontSize: 14),
-      //         ),
-      //         trailing: Column(
-      //           mainAxisAlignment: MainAxisAlignment.center,
-      //           children: [
-      //             Text(
-      //               employee.hoursOff >= 0
-      //                   ? '+${employee.hoursOff}小时'
-      //                   : '${employee.hoursOff}小时',
-      //               style: TextStyle(
-      //                 fontSize: 24,
-      //                 color: employee.hoursOff >= 0 ? Colors.green : Colors.red,
-      //               ),
-      //             ),
-      //           ],
-      //         ),
-      //         onTap: () => _viewDetails(employee),
-      //         onLongPress: () => _editEmployee(employee),
-      //       ),
-      //     );
-      //   },
-      // ),
-    );
-  }
 }
 
 class EmployeeDetailsPage extends StatelessWidget {
-  final Employee employee;
+  final UserModel employee;
 
   EmployeeDetailsPage({required this.employee});
 
@@ -252,7 +221,7 @@ class EmployeeDetailsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('员工名称: ${employee.name}', style: TextStyle(fontSize: 18)),
-            Text('职位: ${employee.position}', style: TextStyle(fontSize: 18)),
+            Text('职位: ${employee.positions}', style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
             Text('调休记录:', style: TextStyle(fontSize: 18)),
             // 这里可以显示员工的调休记录，暂时用示例代替
