@@ -18,8 +18,13 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   DateTime? endTime;
   String remark = '';
   File? photoFile; // 存储照片文件
-
+  String? employeeName; // 选中的员工姓名
+  String totalDurationInput = ''; // 用于手动输入总时长
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController totalDurationController = TextEditingController();
+
+  // 可选的员工列表
+  final List<String> employeeList = ['张三', '李四', '王五'];
 
   // 格式化 DateTime
   String formatDateTime(DateTime dateTime) {
@@ -27,7 +32,8 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   }
 
   // 选择日期+时间（精确到秒）
-  Future<DateTime?> _pickDateTime(BuildContext context, DateTime? initialDate) async {
+  Future<DateTime?> _pickDateTime(
+      BuildContext context, DateTime? initialDate) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -141,6 +147,12 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
 
   // 保存调休记录
   void _saveRecord() {
+    if (employeeName == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('请选择员工')));
+      return;
+    }
+
     if (startTime == null || endTime == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('请先选择完整的开始和结束时间')));
@@ -153,12 +165,38 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
       return;
     }
 
-    Duration duration = endTime!.difference(startTime!);
+    // 获取输入的总时长
+    String inputDuration = totalDurationController.text.trim();
+    List<String> timeParts = inputDuration.split(':');
+
+    // 检查格式是否正确
+    if (timeParts.length != 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('总时长格式不正确，请按照 “小时:分钟” 格式输入')),
+      );
+      return;
+    }
+
+    // 解析小时和分钟
+    int hours = int.tryParse(timeParts[0]) ?? -1;
+    int minutes = int.tryParse(timeParts[1]) ?? -1;
+
+    // 验证小时和分钟是否合法
+    if (hours < 0 || minutes < 0 || minutes >= 60) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('请输入有效的总时长 (小时:分钟)')),
+      );
+      return;
+    }
+
+    Duration totalDuration = Duration(hours: hours, minutes: minutes);
+
+    // 创建记录
     TimeOffRecord newRecord = TimeOffRecord(
-      employeeName: '张三',
+      employeeName: employeeName!,
       startTime: startTime!,
       endTime: endTime!,
-      totalDuration: duration,
+      totalDuration: totalDuration,
       remark: remark,
       photoUrl: photoFile?.path, // 本地图片路径
     );
@@ -172,42 +210,86 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
     return Scaffold(
       appBar: AppBar(title: Text('添加调休记录')),
       body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('开始时间: ${startTime != null ? formatDateTime(startTime!) : "未选择"}'),
-            ElevatedButton(onPressed: _pickStartTime, child: Text('选择开始时间')),
-            SizedBox(height: 16),
-            Text('结束时间: ${endTime != null ? formatDateTime(endTime!) : "未选择"}'),
-            ElevatedButton(onPressed: _pickEndTime, child: Text('选择结束时间')),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(labelText: '备注'),
-              onChanged: (value) => setState(() {
-                remark = value;
-              }),
+          padding: EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 选择员工
+                Text('选择员工'),
+                DropdownButton<String>(
+                  value: employeeName,
+                  hint: Text('请选择员工'),
+                  isExpanded: true,
+                  items: employeeList.map((String name) {
+                    return DropdownMenuItem<String>(
+                      value: name,
+                      child: Text(name),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      employeeName = newValue;
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+
+                Text(
+                    '开始时间: ${startTime != null ? formatDateTime(startTime!) : "未选择"}'),
+                ElevatedButton(
+                    onPressed: _pickStartTime, child: Text('选择开始时间')),
+                SizedBox(height: 16),
+
+                Text(
+                    '结束时间: ${endTime != null ? formatDateTime(endTime!) : "未选择"}'),
+                ElevatedButton(onPressed: _pickEndTime, child: Text('选择结束时间')),
+                SizedBox(height: 16),
+
+                // 手动输入总时长
+                TextField(
+                  controller: totalDurationController,
+                  decoration: InputDecoration(
+                    labelText: '总时长 (格式: 小时:分钟)',
+                    hintText: '例如: 2:30',
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: false),
+                  onChanged: (value) {
+                    setState(() {
+                      totalDurationInput = value;
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+
+                TextField(
+                  decoration: InputDecoration(labelText: '备注'),
+                  onChanged: (value) => setState(() {
+                    remark = value;
+                  }),
+                ),
+                SizedBox(height: 16),
+
+                GestureDetector(
+                  onTap: _showPhotoOptions,
+                  child: photoFile == null
+                      ? Container(
+                          color: Colors.grey[200],
+                          height: 100,
+                          width: double.infinity,
+                          child: Center(child: Text('点击上传照片')),
+                        )
+                      : Image.file(photoFile!),
+                ),
+                SizedBox(height: 16),
+
+                ElevatedButton(
+                  onPressed: _saveRecord,
+                  child: Text('保存记录'),
+                ),
+              ],
             ),
-            SizedBox(height: 16),
-            GestureDetector(
-              onTap: _showPhotoOptions,
-              child: photoFile == null
-                  ? Container(
-                      color: Colors.grey[200],
-                      height: 100,
-                      width: double.infinity,
-                      child: Center(child: Text('点击上传照片')),
-                    )
-                  : Image.file(photoFile!),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _saveRecord,
-              child: Text('保存记录'),
-            ),
-          ],
-        ),
-      ),
+          )),
     );
   }
 }

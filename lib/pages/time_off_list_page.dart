@@ -16,21 +16,22 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
   }
 
   List<TimeOffRecord> records = [
-    TimeOffRecord(
-      employeeName: '张三',
-      startTime: DateTime(2025, 2, 20, 9, 0),
-      endTime: DateTime(2025, 2, 20, 17, 0),
-      totalDuration: Duration(hours: 8),
-      remark: '生病请假',
-      photoUrl: 'https://example.com/photo1.jpg',
-    ),
-    TimeOffRecord(
-      employeeName: '李四',
-      startTime: DateTime(2025, 2, 18, 10, 0),
-      endTime: DateTime(2025, 2, 18, 14, 0),
-      totalDuration: Duration(hours: 4),
-      remark: '家庭原因',
-    ),
+    // 这里是示例记录，实际数据会在运行时通过 _addRecord 方法添加
+    // TimeOffRecord(
+    //   employeeName: '张三',
+    //   startTime: DateTime(2025, 2, 20, 9, 0),
+    //   endTime: DateTime(2025, 2, 20, 17, 0),
+    //   totalDuration: Duration(hours: 8),
+    //   remark: '生病请假',
+    //   photoUrl: 'https://example.com/photo1.jpg',
+    // ),
+    // TimeOffRecord(
+    //   employeeName: '李四',
+    //   startTime: DateTime(2025, 2, 18, 10, 0),
+    //   endTime: DateTime(2025, 2, 18, 14, 0),
+    //   totalDuration: Duration(hours: 4),
+    //   remark: '家庭原因',
+    // ),
   ];
 
   List<TimeOffRecord> filteredRecords = [];
@@ -39,18 +40,21 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
   @override
   void initState() {
     super.initState();
-    filteredRecords = records;
+    // 初始化时反序排列记录
+    filteredRecords = records.reversed.toList();
   }
 
   void _filterRecords(String employeeName) {
     setState(() {
       selectedEmployee = employeeName;
       if (employeeName == '所有员工') {
-        filteredRecords = records;
+        filteredRecords = records.reversed.toList(); // 反序排列所有员工记录
       } else {
         filteredRecords = records
             .where((record) => record.employeeName == employeeName)
-            .toList();
+            .toList()
+            .reversed
+            .toList(); // 反序排列特定员工记录
       }
     });
   }
@@ -66,8 +70,6 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
 
   void _addRecord() {
     // 这里可以通过弹窗或跳转到新增记录页面
-    // 比如，展示一个表单用于填写新的调休记录
-    // print("点击了添加记录按钮");
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -75,9 +77,8 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
           onSave: (newRecord) {
             setState(() {
               records.add(newRecord); // 保存新记录到列表
-              filteredRecords = records; // 更新筛选后的记录
+              filteredRecords = records.reversed.toList(); // 更新筛选后的记录并反序
             });
-            // Navigator.pop(context); // 返回上一级页面
           },
         ),
       ),
