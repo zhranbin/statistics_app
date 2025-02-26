@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:statistics_app/pages/employee_list_page.dart';
+import 'package:statistics_app/pages/time_off_list_page.dart';
 
 import '../provider/theme_provider.dart';
 import '../utils/my_assets.dart';
@@ -42,7 +43,7 @@ class _MainPageState extends State<MainPage> {
             },
             children: [
               EmployeeListPage(),
-              Container(),
+              TimeOffListPage(),
             ]),
         bottomNavigationBar: Theme(
             data: ThemeData(
