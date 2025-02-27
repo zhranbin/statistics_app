@@ -123,9 +123,8 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
       // final bytes = await File(image.path).readAsBytes();
-      final name = ImageManager.uploadImage(File(image.path));
-      print("上传图片 - $name");
-
+      // final name = ImageManager.uploadImage(File(image.path));
+      // print("上传图片 - $name");
       setState(() {
         photoFile = File(image.path);
       });

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:statistics_app/model/user_model.dart';
+import 'package:statistics_app/pages/setting_net_ip_page.dart';
 import 'package:statistics_app/utils/db/user_manager.dart';
+import 'package:statistics_app/utils/my_route.dart';
 
 import '../provider/theme_provider.dart';
 import 'employee_details_page.dart';
@@ -35,6 +37,12 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
       appBar: AppBar(
         title: Text('员工列表'),
         actions: [
+          IconButton(
+          icon: Icon(Icons.settings),
+          onPressed: () async {
+            MyRoute.push(SettingNetIpPage());
+          },
+        ),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: _addEmployee,

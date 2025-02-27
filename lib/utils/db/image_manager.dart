@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:statistics_app/main.dart';
 
 import '../../model/image_model.dart';
+import '../my_shared_preferences.dart';
 import 'db_helper.dart';
 
 class ImageManager {
@@ -46,7 +47,8 @@ class ImageManager {
   // 上传文件
   static Future<String?> uploadImage(File file) async {
     try {
-      final uri = Uri.parse("http://10.0.0.169:9999/upload");  // 替换为你的上传 URL
+      final host = await MySharedPreferences.getLocalServerIP() ?? "";
+      final uri = Uri.parse("${host}/upload");  // 替换为你的上传 URL
       final name = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
       var request = http.MultipartRequest('POST', uri)
         ..fields['name'] = name  // 可选字段
@@ -76,7 +78,8 @@ class ImageManager {
   static Future<void> deleteNetImage(String name) async {
     // 10.0.0.169:9999/delete?name=<file_name>
     try {
-      final uri = Uri.parse("http://10.0.0.169:9999/delete?name=$name");
+      final host = await MySharedPreferences.getLocalServerIP() ?? "";
+      final uri = Uri.parse("${host}/delete?name=$name");
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("删除成功")));

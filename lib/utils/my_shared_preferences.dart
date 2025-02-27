@@ -18,6 +18,9 @@ class MySharedPreferences {
   // 钱包密码
   static const String walletPasswordKey = 'wallet_password';
 
+  // 本地服务器IP
+  static const String localServerIPKey = 'local_server_ip';
+
 
   static Future<String?> getLanguageCode() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -94,6 +97,19 @@ class MySharedPreferences {
   static Future<bool> setWalletPassword(String password,) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(walletPasswordKey, password);
+  }
+
+
+  // 获取本地服务器IP
+  static Future<String?> getLocalServerIP() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(localServerIPKey);
+  }
+
+  // 设置本地服务器IP
+  static Future<bool> setLocalServerIP(String ip,) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(localServerIPKey, ip);
   }
 
 }
