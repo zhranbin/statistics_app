@@ -7,6 +7,8 @@ class RecordModel {
   int imageId;
   String startTime;
   String endTime;
+  String remarks;
+
 
   RecordModel({
     this.id = 0,
@@ -15,7 +17,7 @@ class RecordModel {
     this.imageId = 0,
     this.startTime = '',
     this.endTime = '',
-
+    this.remarks = '',
   });
 
   factory RecordModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class RecordModel {
       imageId: json['imageId'] ?? 0,
       startTime: json['startTime'] ?? '',
       endTime: json['endTime'] ?? '',
+      remarks: json['remarks'] ?? '',
     );
   }
 
@@ -37,6 +40,7 @@ class RecordModel {
       'imageId': imageId,
       'startTime': startTime,
       'endTime': endTime,
+      'remarks': remarks,
     };
   }
 
@@ -47,6 +51,7 @@ class RecordModel {
       'imageId': imageId,
       'startTime': startTime,
       'endTime': endTime,
+      'remarks': remarks,
     };
   }
 

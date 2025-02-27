@@ -34,16 +34,16 @@ class RecordManager {
   }
 
   // 添加记录
-  static Future<RecordModel?> addRecord({required double time, required int userId, required Uint8List imageBody, required String startTime, required String endTime}) async {
+  static Future<RecordModel?> addRecord({required double time, required int userId, required Uint8List imageBody, required String startTime, required String endTime, String remarks = ''}) async {
     ImageModel image = ImageModel(body: imageBody);
     final imageId = await ImageManager.addImage(image);
-    RecordModel record = RecordModel(time: time, userId: userId, imageId: imageId, startTime: startTime, endTime: endTime);
     UserModel? userModel = await UserManager.getUser(userId);
     if (userModel == null) {
       return null;
     }
     userModel.time = userModel.time + time;
     await UserManager.updateUser(userModel);
+    RecordModel record = RecordModel(time: time, userId: userId, imageId: imageId, startTime: startTime, endTime: endTime, remarks: remarks);
     int id = await DBHelper.insert(recordTableName, record.getAddJson());
     await DBHelper.close();
     userModel.id = id;

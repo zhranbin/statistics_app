@@ -46,7 +46,8 @@ class DBHelper {
         "userId" INTEGER NOT NULL,
         "imageId" INTEGER NOT NULL,
         "startTime" TEXT,
-        "endTime" TEXT
+        "endTime" TEXT,
+        "remarks" TEXT
         )
         ''');
 

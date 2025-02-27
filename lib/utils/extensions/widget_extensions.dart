@@ -1,9 +1,11 @@
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 extension WidgetExtension on Widget {
   Widget addPadding(EdgeInsetsGeometry padding) {
-    return Padding(
+    return Container(
+      color: Colors.transparent,
       padding: padding,
       child: this,
     );

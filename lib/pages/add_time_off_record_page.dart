@@ -8,6 +8,7 @@ import 'package:statistics_app/pages/time_off_record.dart';
 import 'package:intl/intl.dart';
 import 'package:statistics_app/utils/db/image_manager.dart';
 import 'package:statistics_app/utils/db/record_manager.dart';
+import 'package:statistics_app/utils/extensions/widget_extensions.dart';
 
 import '../model/image_model.dart';
 import '../utils/db/user_manager.dart';
@@ -249,23 +250,18 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
                   },
                 ),
                 SizedBox(height: 16),
-
-                Text(
-                    '开始时间: ${startTime != null ? formatDateTime(startTime!) : "未选择"}'),
-                ElevatedButton(
-                    onPressed: _pickStartTime, child: Text('选择开始时间')),
+                Text('开始时间: ${startTime != null ? formatDateTime(startTime!) : "未选择"}').addPadding(EdgeInsets.symmetric(vertical: 10)).onTap(_pickStartTime),
                 SizedBox(height: 16),
 
                 Text(
-                    '结束时间: ${endTime != null ? formatDateTime(endTime!) : "未选择"}'),
-                ElevatedButton(onPressed: _pickEndTime, child: Text('选择结束时间')),
+                    '结束时间: ${endTime != null ? formatDateTime(endTime!) : "未选择"}').addPadding(EdgeInsets.symmetric(vertical: 10)).onTap(_pickEndTime),
                 SizedBox(height: 16),
 
                 // 手动输入总时长
                 TextField(
                   controller: totalDurationController,
                   decoration: InputDecoration(
-                    labelText: '总时长 (格式: 小时:分钟)',
+                    labelText: '总计时长（小时）',
                     hintText: '',
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: false),
