@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:statistics_app/model/user_model.dart';
 import 'package:statistics_app/utils/db/user_manager.dart';
 
+import 'employee_details_page.dart';
+
 class Employee {
   String name;
   String position;
@@ -220,29 +222,3 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
 
 }
 
-class EmployeeDetailsPage extends StatelessWidget {
-  final UserModel employee;
-
-  EmployeeDetailsPage({required this.employee});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('${employee.name} 的详情')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('员工名称: ${employee.name}', style: TextStyle(fontSize: 18)),
-            Text('职位: ${employee.positions}', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 20),
-            Text('调休记录:', style: TextStyle(fontSize: 18)),
-            // 这里可以显示员工的调休记录，暂时用示例代替
-            Text('没有调休记录', style: TextStyle(fontSize: 16)),
-          ],
-        ),
-      ),
-    );
-  }
-}

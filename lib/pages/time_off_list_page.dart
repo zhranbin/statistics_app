@@ -129,6 +129,84 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
         itemCount: _data.length,
         itemBuilder: (context, index) {
           final record = _data[index];
+          return Dismissible(
+            key: Key('${record.recordModel.id}'),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (direction) async {
+              final isDelete = await showDialog(context: context, builder: (BuildContext context){
+                return AlertDialog(
+                    title: Text('删除确认'),
+                    content: Text('确定要删除该记录吗？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                        },
+                        child: Text('取消'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(true);
+                        },
+                        child: Text('确定'),
+                      )
+                    ]
+                );
+              });
+              return isDelete == true;
+            },
+            onDismissed: (direction) async {
+              await RecordManager.deleteRecord(record.recordModel.id);
+              _loadAllRecords();
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white, // 设置背景颜色
+                borderRadius: BorderRadius.circular(10), // 圆角
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1), // 阴影颜色
+                    blurRadius: 8, // 阴影模糊程度
+                    offset: Offset(0, 4), // 阴影偏移
+                  ),
+                ],
+              ),
+              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16), // 容器外边距
+              child: ListTile(
+                title: Text(record.userModel.name ?? ''),
+                subtitle: Column(
+                  children: [
+                    Text(
+                        '开始时间: ${record.recordModel.startTime}'
+                    ),
+                    Text(
+                        '结束时间: ${record.recordModel.endTime}'
+                    ),
+                  ],
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      record.recordModel.time >= 0
+                          ? '+${record.recordModel.time}小时'
+                          : '${record.recordModel.time}小时',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color:
+                        record.recordModel.time >= 0 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () => _viewDetails(record),
+              ),
+            ),
+          );
+
+
+
+
           return Container(
             decoration: BoxDecoration(
               color: Colors.white, // 设置背景颜色
