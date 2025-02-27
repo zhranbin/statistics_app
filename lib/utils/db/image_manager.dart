@@ -14,7 +14,7 @@ class ImageManager {
     List<Map<String, dynamic>> list = await DBHelper.query(
         imageTableName, where: 'id = $id');
     if (list.isNotEmpty) {
-      final image = ImageModel.fromJson(list.first);
+      final image = ImageModel.fromJson(list.first); 
       final body = await ImageManager.getImageBody(image.path);
       image.body = body;
       return image;
