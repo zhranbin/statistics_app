@@ -7,7 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:statistics_app/utils/extensions/widget_extensions.dart';
 
 import '../model/show_record_model.dart';
-import '../utils/db/image_manager.dart'; // 导入 intl 来格式化时间
+import '../utils/db/image_manager.dart';
+import '../utils/my_shared_preferences.dart'; // 导入 intl 来格式化时间
 
 class TimeOffDetailPage extends StatefulWidget {
   final ShowRecordModel record;
@@ -20,6 +21,7 @@ class TimeOffDetailPage extends StatefulWidget {
 class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
   late ShowRecordModel record;
   Uint8List? _imageBytes;
+  String _imagePath = '';
 
   @override
   void initState() {
@@ -31,20 +33,21 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
   void _loadImage() async {
     ImageModel? image =
         await ImageManager.getImageById(record.recordModel.imageId);
+    final host = await MySharedPreferences.getLocalServerIP() ?? "";
     if (image != null) {
       setState(() {
-        // _imageBytes = image.body;
+        _imagePath = '${host}/${image.path}';
       });
     }
   }
 
   // 进入全屏图片浏览器页面
-  void _showFullScreenImage(BuildContext context) {
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
     // if (_imageBytes != null) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FullScreenImagePage(),
+        builder: (context) => FullScreenImagePage(imageUrl: imageUrl,),
       ),
     );
     // }
@@ -74,24 +77,11 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
                 style: TextStyle(fontSize: 18)),
             // if (_imageBytes != null) ...[
             SizedBox(height: 20),
-            //https://img2.baidu.com/it/u=2849290704,1302860471&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=1085
             GestureDetector(
-                onTap: () => _showFullScreenImage(context), // 点击图片查看大图
-                // child: Image.memory(
-                //   _imageBytes!, // 使用 Image.memory 显示二进制数据
-                //   width: MediaQuery.of(context).size.width,
-                //   height: 300,
-                //   fit: BoxFit.cover,
-                // ),
-                // child: Image.network(
-                //   'https://www.w3schools.com/w3images/fjords.jpg', // 替换为你的图片 URL
-                //   // width: MediaQuery.of(context).size.width,
-                //   width: 300,
-                //   height: 300,
-                //   fit: BoxFit.cover,
-                // ),
+                onTap: () => _showFullScreenImage(context, _imagePath), // 点击图片查看大图
+
                 child: Image.network(
-                  'https://www.w3schools.com/w3images/fjords.jpg',
+                  _imagePath,
                   width: MediaQuery.of(context).size.width,
                   height: 300,
                   fit: BoxFit.cover,
@@ -125,10 +115,10 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
 
 // 全屏图片页面
 class FullScreenImagePage extends StatelessWidget {
-  // final Uint8List imageBytes;
+  final String imageUrl;
 
   // const FullScreenImagePage({super.key, required this.imageBytes});
-  const FullScreenImagePage({super.key,});
+  const FullScreenImagePage({super.key, required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +137,7 @@ class FullScreenImagePage extends StatelessWidget {
               //   fit: BoxFit.contain, // 保持图片的宽高比
               // ),
               child: Image.network(
-                "https://www.w3schools.com/w3images/fjords.jpg", // 替换为图片的 URL
+                imageUrl, // 替换为图片的 URL
                 fit: BoxFit.contain, // 保持图片的宽高比
               ),
             ),
