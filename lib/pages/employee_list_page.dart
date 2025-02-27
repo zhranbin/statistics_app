@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:statistics_app/model/user_model.dart';
 import 'package:statistics_app/utils/db/user_manager.dart';
 
+import '../provider/theme_provider.dart';
 import 'employee_details_page.dart';
 
 class Employee {
@@ -67,7 +69,11 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
                     ]
                   );
                 });
-                return isDelete == true;
+                if (isDelete != true) {
+                  return false;
+                }
+                final ver = await verifyPassword(context);
+                return ver == true;
               },
               onDismissed: (direction) async {
                 await UserManager.deleteUser(user.id);
@@ -217,6 +223,51 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
         builder: (context) => EmployeeDetailsPage(employee: user),
       ),
     );
+  }
+
+  Future<bool> verifyPassword(BuildContext context, {MyTheme? theme}) async {
+    Future<bool> _checkFingerprint() async {
+      final LocalAuthentication auth = LocalAuthentication();
+      final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
+      final bool canAuthenticate =
+          canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+      //print('是否支持指纹识别: $canAuthenticate');
+      if (canAuthenticate) {
+        final List<BiometricType> availableBiometrics =
+        await auth.getAvailableBiometrics();
+        //print('支持的指纹识别: $availableBiometrics');
+        if (availableBiometrics.isNotEmpty) {
+          try {
+            final bool didAuthenticate = await auth.authenticate(
+              localizedReason: 'Please authenticate to show account balance',
+              options: const AuthenticationOptions(
+                biometricOnly: true,
+                stickyAuth: true,
+              ),
+            );
+            //print('是否验证成功: $didAuthenticate');
+            auth.stopAuthentication();
+            return didAuthenticate;
+          } catch (e) {
+            print(e);
+            return false;
+          }
+        } else {
+          //print('没有可用的指纹识别');
+        }
+      }
+      {
+        //print('不支持指纹识别');
+        return false;
+      }
+    }
+    final res = await _checkFingerprint();
+    if (res != true) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('验证失败')));
+      return false;
+    }
+    return res; // 验证通过
   }
 
 
