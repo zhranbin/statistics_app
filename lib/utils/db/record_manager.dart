@@ -34,27 +34,28 @@ class RecordManager {
   }
 
   // 添加记录
-  static Future<int> addRecord({required int time, required int userId, required Uint8List imageBody, required String startTime, required String endTime}) async {
+  static Future<RecordModel?> addRecord({required double time, required int userId, required Uint8List imageBody, required String startTime, required String endTime}) async {
     ImageModel image = ImageModel(body: imageBody);
     final imageId = await ImageManager.addImage(image);
     RecordModel record = RecordModel(time: time, userId: userId, imageId: imageId, startTime: startTime, endTime: endTime);
     UserModel? userModel = await UserManager.getUser(userId);
     if (userModel == null) {
-      return -1;
+      return null;
     }
     userModel.time = userModel.time + time;
     await UserManager.updateUser(userModel);
     int id = await DBHelper.insert(recordTableName, record.getAddJson());
     await DBHelper.close();
-    return id;
+    userModel.id = id;
+    return record;
   }
 
-  // 添加记录
-  static Future<int> addNewRecord(RecordModel record) async {
-    int id = await DBHelper.insert(recordTableName, record.getAddJson());
-    await DBHelper.close();
-    return id;
-  }
+  // // 添加记录
+  // static Future<int> addNewRecord(RecordModel record) async {
+  //   int id = await DBHelper.insert(recordTableName, record.getAddJson());
+  //   await DBHelper.close();
+  //   return id;
+  // }
 
   // 删除记录
   static Future<int> deleteRecord(int id) async {

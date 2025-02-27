@@ -2,7 +2,7 @@
 
 class RecordModel {
   int id;
-  int time;
+  double time;
   int userId;
   int imageId;
   String startTime;

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:statistics_app/model/record_model.dart';
+import 'package:statistics_app/model/show_record_model.dart';
+import 'package:statistics_app/model/user_model.dart';
 import 'package:statistics_app/pages/add_time_off_record_page.dart';
 import 'package:statistics_app/pages/time_off_detail_page.dart';
 import 'package:statistics_app/pages/time_off_record.dart';
-import 'package:intl/intl.dart'; // 引入 intl 格式化时间
+import 'package:intl/intl.dart';
+
+import '../utils/db/record_manager.dart';
+import '../utils/db/user_manager.dart'; // 引入 intl 格式化时间
 
 class TimeOffListPage extends StatefulWidget {
   @override
@@ -15,51 +21,43 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 
-  List<TimeOffRecord> records = [
-    // 这里是示例记录，实际数据会在运行时通过 _addRecord 方法添加
-    // TimeOffRecord(
-    //   employeeName: '张三',
-    //   startTime: DateTime(2025, 2, 20, 9, 0),
-    //   endTime: DateTime(2025, 2, 20, 17, 0),
-    //   totalDuration: Duration(hours: 8),
-    //   remark: '生病请假',
-    //   photoUrl: 'https://example.com/photo1.jpg',
-    // ),
-    // TimeOffRecord(
-    //   employeeName: '李四',
-    //   startTime: DateTime(2025, 2, 18, 10, 0),
-    //   endTime: DateTime(2025, 2, 18, 14, 0),
-    //   totalDuration: Duration(hours: 4),
-    //   remark: '家庭原因',
-    // ),
-  ];
+  List<ShowRecordModel> _data = [];
+  List<ShowRecordModel> _allData = [];
+  UserModel? _userModel;
 
-  List<TimeOffRecord> filteredRecords = [];
-  String selectedEmployee = '所有员工';
+
 
   @override
   void initState() {
     super.initState();
-    // 初始化时反序排列记录
-    filteredRecords = records.reversed.toList();
+    _loadAllRecords();
   }
 
-  void _filterRecords(String employeeName) {
-    setState(() {
-      selectedEmployee = employeeName;
-      if (employeeName == '所有员工') {
-        filteredRecords = records.reversed.toList(); // 反序排列所有员工记录
-      } else {
-        filteredRecords = records
-            .where((record) => record.employeeName == employeeName)
-            .toList()
-            .reversed
-            .toList(); // 反序排列特定员工记录
+
+  void _loadAllRecords() async {
+    List<ShowRecordModel> d = [];
+    final records = await RecordManager.getAllRecords();
+    for (var record in records) {
+      UserModel? user = await UserManager.getUser(record.userId);
+      if (user != null) {
+        d.add(ShowRecordModel(recordModel: record, userModel: user));
       }
-    });
+    }
+    _allData = d;
+    _refreshAction();
+
   }
 
-  void _viewDetails(TimeOffRecord record) {
+  void _refreshAction() {
+    if (_userModel == null) {
+      _data = _allData;
+    } else {
+      _data = _allData.where((record) => record.userModel!.id == _userModel!.id).toList();
+    }
+    setState(() {});
+  }
+
+  void _viewDetails(ShowRecordModel record) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -76,8 +74,7 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
         builder: (context) => AddTimeOffRecordPage(
           onSave: (newRecord) {
             setState(() {
-              records.add(newRecord); // 保存新记录到列表
-              filteredRecords = records.reversed.toList(); // 更新筛选后的记录并反序
+              _loadAllRecords();
             });
           },
         ),
@@ -97,15 +94,20 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
               showDialog(
                 context: context,
                 builder: (context) {
+                  List<UserModel> users = [];
                   return AlertDialog(
                     title: Text('筛选员工'),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: ['所有员工', '张三', '李四'].map((employee) {
+                      children: ([UserModel()] + users).map((employee) {
                         return ListTile(
-                          title: Text(employee),
+                          title: Text(employee.id != 0 ? employee.name : '全部'),
                           onTap: () {
-                            _filterRecords(employee);
+                            _userModel = employee;
+                            if (employee.id == 0) {
+                              _userModel = null;
+                            }
+                            _refreshAction();
                             Navigator.pop(context);
                           },
                         );
@@ -123,14 +125,14 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
         ],
       ),
       body: ListView.builder(
-        itemCount: filteredRecords.length,
+        itemCount: _data.length,
         itemBuilder: (context, index) {
-          final record = filteredRecords[index];
+          final record = _data[index];
           return ListTile(
-            title: Text(record.employeeName),
+            title: Text(record.userModel.name ?? ''),
             subtitle: Text(
-              '调休时间: ${formatDateTime(record.startTime)} - ${formatDateTime(record.endTime)}\n'
-              '时长: ${record.totalDuration.inHours}小时',
+              '调休时间: ${record.recordModel.startTime} - ${record.recordModel.endTime}\n'
+              '时长: ${record.recordModel.time.toStringAsFixed(1)}小时',
             ),
             trailing: Icon(Icons.arrow_forward),
             onTap: () => _viewDetails(record),

@@ -3,19 +3,19 @@ import 'dart:typed_data';
 class ImageModel {
   int id;
   Uint8List? body;
-  int recordId;
+  String path;
 
   ImageModel({
     this.id = 0,
     this.body,
-    this.recordId = 0,
+    this.path = '',
   });
 
   factory ImageModel.fromJson(Map<String, dynamic> json) {
     return ImageModel(
       id: json['id'] ?? 0,
       body: json['body'],
-      recordId: json['recordId'] ?? 0,
+      path: json['path'] ?? '',
     );
   }
 
@@ -23,14 +23,13 @@ class ImageModel {
     return {
       'id': id,
       'body': body,
-      'recordId': recordId,
+      'path': path,
     };
   }
 
   Map<String, dynamic> getAddJson() {
     return {
-      'body': body,
-      'recordId': recordId,
+      'path': path,
     };
   }
 

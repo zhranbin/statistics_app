@@ -2,7 +2,7 @@ class UserModel {
   int id;
   String name;
   String positions;
-  int time;
+  double time;
 
   UserModel({
     this.id = 0,
@@ -33,6 +33,7 @@ class UserModel {
     return {
       'name': name,
       'positions': positions,
+      'time': time,
     };
   }
 }

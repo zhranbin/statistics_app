@@ -1,11 +1,19 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // 导入 image_picker
+import 'package:statistics_app/model/record_model.dart';
+import 'package:statistics_app/model/user_model.dart';
 import 'package:statistics_app/pages/time_off_record.dart';
 import 'package:intl/intl.dart';
+import 'package:statistics_app/utils/db/image_manager.dart';
+import 'package:statistics_app/utils/db/record_manager.dart';
+
+import '../model/image_model.dart';
+import '../utils/db/user_manager.dart';
 
 class AddTimeOffRecordPage extends StatefulWidget {
-  final Function(TimeOffRecord) onSave;
+  final Function(RecordModel) onSave;
 
   AddTimeOffRecordPage({required this.onSave});
 
@@ -18,13 +26,13 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   DateTime? endTime;
   String remark = '';
   File? photoFile; // 存储照片文件
-  String? employeeName; // 选中的员工姓名
   String totalDurationInput = ''; // 用于手动输入总时长
   final ImagePicker _picker = ImagePicker();
   final TextEditingController totalDurationController = TextEditingController();
 
   // 可选的员工列表
-  final List<String> employeeList = ['张三', '李四', '王五'];
+  late List<UserModel> employeeList = [];
+  UserModel? _selectedEmployee;
 
   // 格式化 DateTime
   String formatDateTime(DateTime dateTime) {
@@ -32,8 +40,7 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   }
 
   // 选择日期+时间（精确到秒）
-  Future<DateTime?> _pickDateTime(
-      BuildContext context, DateTime? initialDate) async {
+  Future<DateTime?> _pickDateTime(BuildContext context, DateTime? initialDate) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate ?? DateTime.now(),
@@ -46,7 +53,7 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: initialDate != null
-          ? TimeOfDay.fromDateTime(initialDate)
+          ? TimeOfDay(hour: pickedDate.hour, minute: pickedDate.minute)
           : TimeOfDay.now(),
     );
 
@@ -146,8 +153,8 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   }
 
   // 保存调休记录
-  void _saveRecord() {
-    if (employeeName == null) {
+  Future<void> _saveRecord() async {
+    if (_selectedEmployee == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('请选择员工')));
       return;
@@ -167,43 +174,51 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
 
     // 获取输入的总时长
     String inputDuration = totalDurationController.text.trim();
-    List<String> timeParts = inputDuration.split(':');
-
-    // 检查格式是否正确
-    if (timeParts.length != 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('总时长格式不正确，请按照 “小时:分钟” 格式输入')),
-      );
+    double time = 0;
+    try {
+      time = double.parse(inputDuration);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('请输入正确的总时长')));
       return;
     }
 
-    // 解析小时和分钟
-    int hours = int.tryParse(timeParts[0]) ?? -1;
-    int minutes = int.tryParse(timeParts[1]) ?? -1;
-
-    // 验证小时和分钟是否合法
-    if (hours < 0 || minutes < 0 || minutes >= 60) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请输入有效的总时长 (小时:分钟)')),
-      );
+    if (photoFile == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('请选择照片')));
       return;
     }
-
-    Duration totalDuration = Duration(hours: hours, minutes: minutes);
-
-    // 创建记录
-    TimeOffRecord newRecord = TimeOffRecord(
-      employeeName: employeeName!,
-      startTime: startTime!,
-      endTime: endTime!,
-      totalDuration: totalDuration,
-      remark: remark,
-      photoUrl: photoFile?.path, // 本地图片路径
-    );
-
-    widget.onSave(newRecord);
+    int imageId = 0;
+    List<int> bytes = [];
+    try {
+      bytes = await photoFile!.readAsBytes();  // 读取为字节数据
+    } catch (e) {
+      print('Error saving image: $e');
+    }
+    RecordModel? model = await RecordManager.addRecord(time: time, userId: _selectedEmployee!.id, imageBody: Uint8List.fromList(bytes), startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!));
+    if (model == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('添加记录失败')));
+      return;
+    }
+    // RecordModel model = RecordModel(time: time, userId: _selectedEmployee!.id, imageId: imageId, startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!));
+    // await RecordManager.addNewRecord(model);
+    widget.onSave(model);
     Navigator.pop(context);
   }
+
+  _loadUser() async {
+    employeeList = await UserManager.getUserList();
+    setState(() {});
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -217,19 +232,19 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
               children: [
                 // 选择员工
                 Text('选择员工'),
-                DropdownButton<String>(
-                  value: employeeName,
+                DropdownButton<UserModel>(
+                  value: _selectedEmployee,
                   hint: Text('请选择员工'),
                   isExpanded: true,
-                  items: employeeList.map((String name) {
-                    return DropdownMenuItem<String>(
-                      value: name,
-                      child: Text(name),
+                  items: employeeList.map((UserModel user) {
+                    return DropdownMenuItem<UserModel>(
+                      value: user,
+                      child: Text('${user.name}(${user.positions})'),
                     );
                   }).toList(),
-                  onChanged: (String? newValue) {
+                  onChanged: (UserModel? newValue) {
                     setState(() {
-                      employeeName = newValue;
+                      _selectedEmployee = newValue;
                     });
                   },
                 ),
@@ -251,7 +266,7 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
                   controller: totalDurationController,
                   decoration: InputDecoration(
                     labelText: '总时长 (格式: 小时:分钟)',
-                    hintText: '例如: 2:30',
+                    hintText: '',
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: false),
                   onChanged: (value) {

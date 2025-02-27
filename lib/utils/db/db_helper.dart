@@ -35,14 +35,14 @@ class DBHelper {
         "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
         "name" TEXT,
         "positions" TEXT,
-        "time" INTEGER NOT NULL DEFAULT 0
+        "time" REAL NOT NULL DEFAULT 0
         )
         ''');
 
         await db.execute('''
         CREATE TABLE "$recordTableName" (
         "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
-        "time" INTEGER NOT NULL DEFAULT 0,
+        "time" REAL NOT NULL DEFAULT 0,
         "userId" INTEGER NOT NULL,
         "imageId" INTEGER NOT NULL,
         "startTime" TEXT,
@@ -53,8 +53,7 @@ class DBHelper {
         await db.execute('''
         CREATE TABLE "$imageTableName" (
         "id" INTEGER NOT NULL DEFAULT 0 PRIMARY KEY AUTOINCREMENT,
-        "body" MEDIUMBLOB NOT NULL,
-        "recordId" INTEGER NOT NULL
+        "path" TEXT
         )
         ''');
         return ;

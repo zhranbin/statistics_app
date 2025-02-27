@@ -98,6 +98,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         title: 'Flutter Demo',
         navigatorKey: navigatorKey,
         home: const MainPage(),
+        locale: Locale('zh', 'CN'), // 简体中文
         builder: (BuildContext context, Widget? child) {
           return FlutterSmartDialog.init().call(context, child);
         },
