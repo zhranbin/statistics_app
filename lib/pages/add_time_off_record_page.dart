@@ -6,6 +6,7 @@ import 'package:statistics_app/model/record_model.dart';
 import 'package:statistics_app/model/user_model.dart';
 import 'package:statistics_app/pages/time_off_record.dart';
 import 'package:intl/intl.dart';
+import 'package:statistics_app/provider/theme_provider.dart';
 import 'package:statistics_app/utils/db/image_manager.dart';
 import 'package:statistics_app/utils/db/record_manager.dart';
 import 'package:statistics_app/utils/extensions/widget_extensions.dart';
@@ -34,6 +35,7 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   // 可选的员工列表
   late List<UserModel> employeeList = [];
   UserModel? _selectedEmployee;
+  RecordType _type =  RecordType.timeOff;
 
   // 格式化 DateTime
   String formatDateTime(DateTime dateTime) {
@@ -183,6 +185,9 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
           .showSnackBar(SnackBar(content: Text('请输入正确的总时长')));
       return;
     }
+    if (_type == RecordType.timeOff) {
+      time = 0 - time;
+    }
 
     if (photoFile == null) {
       ScaffoldMessenger.of(context)
@@ -196,7 +201,7 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
     } catch (e) {
       print('Error saving image: $e');
     }
-    RecordModel? model = await RecordManager.addRecord(time: time, userId: _selectedEmployee!.id, imageBody: Uint8List.fromList(bytes), startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!));
+    RecordModel? model = await RecordManager.addRecord(time: time, userId: _selectedEmployee!.id, imageBody: Uint8List.fromList(bytes), startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!), remarks: remark);
     if (model == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('添加记录失败')));
@@ -223,6 +228,7 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = myListenTheme(context);
     return Scaffold(
       appBar: AppBar(title: Text('添加调休记录')),
       body: Padding(
@@ -231,6 +237,37 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Row(
+                      children: [
+                        if (_type == RecordType.waitTimeOff) Icon(Icons.circle_outlined, color: theme.grey,),
+                        if (_type == RecordType.timeOff) Icon(Icons.check_circle_outline_rounded, color: theme.primaryColor,),
+                        SizedBox(width: 4),
+                        Text('调休(扣除时间)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      ],
+                    ).addPadding(EdgeInsets.symmetric(vertical: 10)).onTap((){
+                      setState(() {
+                        _type = RecordType.timeOff;
+                      });
+                    }),
+                    SizedBox(width: 40),
+                    Row(
+                      children: [
+                        if (_type == RecordType.timeOff) Icon(Icons.circle_outlined, color: theme.grey,),
+                        if (_type == RecordType.waitTimeOff) Icon(Icons.check_circle_outline_rounded, color: theme.primaryColor,),
+                        SizedBox(width: 4),
+                        Text('待调休(增加时间)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      ],
+                    ).addPadding(EdgeInsets.symmetric(vertical: 10)).onTap((){
+                      setState(() {
+                        _type = RecordType.waitTimeOff;
+                      });
+                    }),
+                  ]
+                ),
+                SizedBox(height: 16,),
+
                 // 选择员工
                 Text('选择员工'),
                 DropdownButton<UserModel>(
@@ -303,4 +340,12 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
           )),
     );
   }
+}
+
+
+enum RecordType {
+  // 调休
+  timeOff,
+  // 待调休
+  waitTimeOff,
 }

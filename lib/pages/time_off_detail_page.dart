@@ -58,7 +58,7 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
             Text('开始时间: ${record.recordModel.startTime}', style: TextStyle(fontSize: 18)),
             Text('结束时间: ${record.recordModel.endTime}', style: TextStyle(fontSize: 18)),
             // Text('时长: ${record.totalDuration.inHours} 小时', style: TextStyle(fontSize: 18)),
-            // Text('备注: ${record.remark}', style: TextStyle(fontSize: 18)),
+            Text('备注: ${record.recordModel.remarks}', style: TextStyle(fontSize: 18)),
             if (_imageBytes != null) ...[
               SizedBox(height: 20),
               Image.memory(
