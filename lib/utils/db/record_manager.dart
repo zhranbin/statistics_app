@@ -34,8 +34,8 @@ class RecordManager {
   }
 
   // 添加记录
-  static Future<RecordModel?> addRecord({required double time, required int userId, required Uint8List imageBody, required String startTime, required String endTime, String remarks = ''}) async {
-    ImageModel image = ImageModel(body: imageBody);
+  static Future<RecordModel?> addRecord({required double time, required int userId, required String imagePath, required String startTime, required String endTime, String remarks = ''}) async {
+    ImageModel image = ImageModel(path: imagePath);
     final imageId = await ImageManager.addImage(image);
     UserModel? userModel = await UserManager.getUser(userId);
     if (userModel == null) {
