@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:statistics_app/model/image_model.dart';
 import 'package:statistics_app/pages/time_off_record.dart';
@@ -20,11 +19,8 @@ class TimeOffDetailPage extends StatefulWidget {
 }
 
 class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
-
-
   late ShowRecordModel record;
   Uint8List? _imageBytes;
-
 
   @override
   void initState() {
@@ -39,6 +35,18 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
       setState(() {
         // _imageBytes = image.body;
       });
+    }
+  }
+
+  // 进入全屏图片浏览器页面
+  void _showFullScreenImage(BuildContext context) {
+    if (_imageBytes != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenImagePage(imageBytes: _imageBytes!),
+        ),
+      );
     }
   }
 
@@ -57,14 +65,17 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
             Text('员工名称: ${record.userModel.name}', style: TextStyle(fontSize: 18)),
             Text('开始时间: ${record.recordModel.startTime}', style: TextStyle(fontSize: 18)),
             Text('结束时间: ${record.recordModel.endTime}', style: TextStyle(fontSize: 18)),
-            // Text('时长: ${record.totalDuration.inHours} 小时', style: TextStyle(fontSize: 18)),
             Text('备注: ${record.recordModel.remarks}', style: TextStyle(fontSize: 18)),
             if (_imageBytes != null) ...[
               SizedBox(height: 20),
-              Image.memory(
-                _imageBytes!, // 使用 Image.memory 显示二进制数据
-                width: MediaQuery.of(context).size.width,
-                height: 300,
+              GestureDetector(
+                onTap: () => _showFullScreenImage(context), // 点击图片查看大图
+                child: Image.memory(
+                  _imageBytes!, // 使用 Image.memory 显示二进制数据
+                  width: MediaQuery.of(context).size.width,
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
               ),
             ]
           ],
@@ -74,7 +85,43 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
   }
 }
 
+// 全屏图片页面
+class FullScreenImagePage extends StatelessWidget {
+  final Uint8List imageBytes;
 
+  const FullScreenImagePage({super.key, required this.imageBytes});
 
-
-
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black, // 背景颜色为黑色
+      body: Stack(
+        children: [
+          InteractiveViewer(
+            panEnabled: true, // 支持平移
+            boundaryMargin: EdgeInsets.all(80), // 边界允许区域
+            minScale: 0.1, // 最小缩放比例
+            maxScale: 4.0, // 最大缩放比例
+            child: Center(
+              child: Image.memory(
+                imageBytes,
+                fit: BoxFit.contain, // 保持图片的宽高比
+              ),
+            ),
+          ),
+          Positioned(
+            top: 30,
+            right: 20,
+            child: IconButton(
+              icon: Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () {
+                // Navigator.pop(context); // 关闭全屏
+                Navigator.of(context).pop(); // 关闭全屏
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
