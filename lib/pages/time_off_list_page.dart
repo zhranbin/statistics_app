@@ -6,6 +6,7 @@ import 'package:statistics_app/pages/add_time_off_record_page.dart';
 import 'package:statistics_app/pages/time_off_detail_page.dart';
 import 'package:statistics_app/pages/time_off_record.dart';
 import 'package:intl/intl.dart';
+import 'package:statistics_app/utils/extensions/widget_extensions.dart';
 
 import '../utils/db/record_manager.dart';
 import '../utils/db/user_manager.dart'; // 引入 intl 格式化时间
@@ -98,8 +99,8 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
                 builder: (context) {
                   return AlertDialog(
                     title: Text('筛选员工'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    content: ListView(
+                      // mainAxisSize: MainAxisSize.min,
                       children: ([UserModel()] + users).map((employee) {
                         return ListTile(
                           title: Text(employee.id != 0 ? employee.name : '全部'),
@@ -113,7 +114,7 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
                           },
                         );
                       }).toList(),
-                    ),
+                    ).size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height - 240),
                   );
                 },
               );
