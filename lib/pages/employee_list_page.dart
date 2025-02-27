@@ -71,32 +71,46 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
                 await UserManager.deleteUser(user.id);
                 _loadUsers();
               },
-              child: ListTile(
-                title: Text(
-                  user.name,
-                  style: TextStyle(fontSize: 16),
-                ),
-                subtitle: Text(
-                  user.positions,
-                  style: TextStyle(fontSize: 14),
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      user.time >= 0
-                          ? '+${user.time}小时'
-                          : '${user.time}小时',
-                      style: TextStyle(
-                        fontSize: 24,
-                        color:
-                        user.time >= 0 ? Colors.green : Colors.red,
-                      ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white, // 设置背景颜色
+                  borderRadius: BorderRadius.circular(10), // 圆角
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1), // 阴影颜色
+                      blurRadius: 8, // 阴影模糊程度
+                      offset: Offset(0, 4), // 阴影偏移
                     ),
                   ],
                 ),
-                onLongPress: () => _editUser(user),
-                onTap: () => _viewDetails(user),
+                margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16), // 容器外边距
+                child: ListTile(
+                  title: Text(
+                    user.name,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  subtitle: Text(
+                    user.positions,
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        user.time >= 0
+                            ? '+${user.time}小时'
+                            : '${user.time}小时',
+                        style: TextStyle(
+                          fontSize: 24,
+                          color:
+                          user.time >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  onLongPress: () => _editUser(user),
+                  onTap: () => _viewDetails(user),
+                ),
               ),
             );
           }),

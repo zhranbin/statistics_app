@@ -90,11 +90,12 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.filter_list),
-            onPressed: () {
+            onPressed: () async {
+              List<UserModel> users = [];
+              users = await UserManager.getUserList();
               showDialog(
                 context: context,
                 builder: (context) {
-                  List<UserModel> users = [];
                   return AlertDialog(
                     title: Text('筛选员工'),
                     content: Column(
@@ -128,14 +129,48 @@ class _TimeOffListPageState extends State<TimeOffListPage> {
         itemCount: _data.length,
         itemBuilder: (context, index) {
           final record = _data[index];
-          return ListTile(
-            title: Text(record.userModel.name ?? ''),
-            subtitle: Text(
-              '调休时间: ${record.recordModel.startTime} - ${record.recordModel.endTime}\n'
-              '时长: ${record.recordModel.time.toStringAsFixed(1)}小时',
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // 设置背景颜色
+              borderRadius: BorderRadius.circular(10), // 圆角
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1), // 阴影颜色
+                  blurRadius: 8, // 阴影模糊程度
+                  offset: Offset(0, 4), // 阴影偏移
+                ),
+              ],
             ),
-            trailing: Icon(Icons.arrow_forward),
-            onTap: () => _viewDetails(record),
+            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16), // 容器外边距
+            child: ListTile(
+              title: Text(record.userModel.name ?? ''),
+              subtitle: Column(
+                children: [
+                  Text(
+                      '开始时间: ${record.recordModel.startTime}'
+                  ),
+                  Text(
+                      '结束时间: ${record.recordModel.endTime}'
+                  ),
+                ],
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    record.recordModel.time >= 0
+                        ? '+${record.recordModel.time}小时'
+                        : '${record.recordModel.time}小时',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color:
+                      record.recordModel.time >= 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              onTap: () => _viewDetails(record),
+            ),
           );
         },
       ),
