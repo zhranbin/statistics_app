@@ -1,7 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:http/http.dart' as http;
+import 'package:statistics_app/main.dart';
 
 import '../../model/image_model.dart';
 import 'db_helper.dart';
@@ -14,9 +18,7 @@ class ImageManager {
     List<Map<String, dynamic>> list = await DBHelper.query(
         imageTableName, where: 'id = $id');
     if (list.isNotEmpty) {
-      final image = ImageModel.fromJson(list.first); 
-      final body = await ImageManager.getImageBody(image.path);
-      image.body = body;
+      final image = ImageModel.fromJson(list.first);
       return image;
     }
     return null;
@@ -24,9 +26,6 @@ class ImageManager {
 
   // 添加图片
   static Future<int> addImage(ImageModel image) async {
-    if (image.body == null) return -1;
-    final path = await saveImageToLocal(image.body!);
-    image.path = path ?? '';
     // 插入数据库
     return await DBHelper.insert(imageTableName, image.getAddJson());
   }
@@ -37,11 +36,60 @@ class ImageManager {
         imageTableName, where: 'id = $id');
     if (list.isNotEmpty) {
       final image = ImageModel.fromJson(list.first);
-      await deleteImageFromLocal(image.path);
+      await deleteNetImage(image.path);
     }
     // 删除数据库
     return await DBHelper.delete(imageTableName, where: 'id = $id');
   }
+
+
+  // 上传文件
+  static Future<String?> uploadImage(File file) async {
+    try {
+      final uri = Uri.parse("http://10.0.0.169:9999/upload");  // 替换为你的上传 URL
+      final name = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      var request = http.MultipartRequest('POST', uri)
+        ..fields['name'] = name  // 可选字段
+        ..files.add(await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          contentType: MediaType('application', 'octet-stream'),
+        ));
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("上传成功")));
+        return name;
+      } else {
+        ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("上传失败")));
+        return null;
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("上传错误")));
+      return null;
+    }
+  }
+
+  // 删除图片
+  static Future<void> deleteNetImage(String name) async {
+    // 10.0.0.169:9999/delete?name=<file_name>
+    try {
+      final uri = Uri.parse("http://10.0.0.169:9999/delete?name=$name");
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("删除成功")));
+      } else {
+        ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("删除失败")));
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(MyApp.context).showSnackBar(SnackBar(content: Text("删除错误")));
+    }
+  }
+
+
 
 
   // 保存图片到本地

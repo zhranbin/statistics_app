@@ -122,6 +122,10 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
   Future<void> _pickPhoto(ImageSource source) async {
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
+      // final bytes = await File(image.path).readAsBytes();
+      final name = ImageManager.uploadImage(File(image.path));
+      print("上传图片 - $name");
+
       setState(() {
         photoFile = File(image.path);
       });
@@ -194,14 +198,13 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
           .showSnackBar(SnackBar(content: Text('请选择照片')));
       return;
     }
-    int imageId = 0;
-    List<int> bytes = [];
-    try {
-      bytes = await photoFile!.readAsBytes();  // 读取为字节数据
-    } catch (e) {
-      print('Error saving image: $e');
+    final imagePath = await ImageManager.uploadImage(photoFile!);
+    if (imagePath == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('上传图片失败')));
+      return;
     }
-    RecordModel? model = await RecordManager.addRecord(time: time, userId: _selectedEmployee!.id, imageBody: Uint8List.fromList(bytes), startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!), remarks: remark);
+    RecordModel? model = await RecordManager.addRecord(time: time, userId: _selectedEmployee!.id, imagePath: imagePath, startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!), remarks: remark);
     if (model == null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('添加记录失败')));

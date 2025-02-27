@@ -33,7 +33,7 @@ class _TimeOffDetailPageState extends State<TimeOffDetailPage> {
         await ImageManager.getImageById(record.recordModel.imageId);
     if (image != null) {
       setState(() {
-        _imageBytes = image.body;
+        // _imageBytes = image.body;
       });
     }
   }
