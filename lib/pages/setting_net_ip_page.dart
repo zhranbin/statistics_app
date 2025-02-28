@@ -22,7 +22,7 @@ class _SettingNetIpPageState extends State<SettingNetIpPage> {
   }
 
   _loadNetIp() async {
-    _textEditingController.text = await MySharedPreferences.getLocalServerIP() ?? "";
+    _textEditingController.text = await MySharedPreferences.getLocalServerIP() ?? "http://";
   }
 
   @override
@@ -35,7 +35,7 @@ class _SettingNetIpPageState extends State<SettingNetIpPage> {
           TextField(
             controller: _textEditingController,
             decoration: InputDecoration(
-              hintText: '请输入网络IP',
+              hintText: '',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:statistics_app/model/user_model.dart';
@@ -6,6 +8,9 @@ import 'package:statistics_app/utils/db/user_manager.dart';
 import 'package:statistics_app/utils/my_route.dart';
 
 import '../provider/theme_provider.dart';
+import '../utils/db/backup_manager.dart';
+import '../utils/db/image_manager.dart';
+import '../utils/db/record_manager.dart';
 import 'employee_details_page.dart';
 
 class Employee {
@@ -37,6 +42,40 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
       appBar: AppBar(
         title: Text('员工列表'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.upload),
+            onPressed: () async {
+              await BackupManager.backupUsers();
+              await BackupManager.backupImages();
+              await BackupManager.backupRecords();
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.earbuds_outlined),
+            onPressed: () async {
+              final records = await RecordManager.getAllRecords();
+              for (var record in records) {
+                final image = await ImageManager.getImageById(record.imageId);
+                if (image == null) {
+                  continue;
+                }
+                if (!image.path.contains("com.example.statistics_app")) {
+                  continue;
+                }
+                print("图片路径 - ${image.path}");
+                final name = await ImageManager.uploadImage(File(image.path));
+                if (name == null) {
+                  continue;
+                }
+                print("图片上传 - ${name}");
+                image.path = name;
+                await ImageManager.deleteImage(record.imageId);
+                final imageId = await ImageManager.addImage(image);
+                record.imageId = imageId;
+                await RecordManager.updateRecord(record);
+              }
+            },
+          ),
           IconButton(
           icon: Icon(Icons.settings),
           onPressed: () async {

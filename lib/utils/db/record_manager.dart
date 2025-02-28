@@ -74,4 +74,12 @@ class RecordManager {
     await DBHelper.close();
     return result;
   }
+
+  // 更新记录
+  static Future<int> updateRecord(RecordModel record) async {
+    int result = await DBHelper.update(recordTableName, record.getAddJson(), where: 'id = ${record.id}');
+    await DBHelper.close();
+    return result;
+  }
+
 }
