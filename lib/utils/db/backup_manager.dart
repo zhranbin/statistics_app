@@ -16,6 +16,7 @@ class BackupManager {
 
   static backupUsers() async {
     List<Map<String, dynamic>> result = await DBHelper.query(userTableName);
+    print("备份用户");
     await uploadData(result, prefix: 'user');
   }
 
