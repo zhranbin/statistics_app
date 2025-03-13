@@ -10,6 +10,7 @@ import 'package:statistics_app/provider/theme_provider.dart';
 import 'package:statistics_app/utils/db/image_manager.dart';
 import 'package:statistics_app/utils/db/record_manager.dart';
 import 'package:statistics_app/utils/extensions/widget_extensions.dart';
+import 'package:statistics_app/utils/my_loading.dart';
 
 import '../model/image_model.dart';
 import '../utils/db/user_manager.dart';
@@ -197,18 +198,23 @@ class _AddTimeOffRecordPageState extends State<AddTimeOffRecordPage> {
           .showSnackBar(SnackBar(content: Text('请选择照片')));
       return;
     }
+
+    MyLoading.show();
     final imagePath = await ImageManager.uploadImage(photoFile!);
     if (imagePath == null) {
+      await MyLoading.dismiss();
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('上传图片失败')));
       return;
     }
     RecordModel? model = await RecordManager.addRecord(time: time, userId: _selectedEmployee!.id, imagePath: imagePath, startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!), remarks: remark);
     if (model == null) {
+      await MyLoading.dismiss();
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('添加记录失败')));
       return;
     }
+    await MyLoading.dismiss();
     // RecordModel model = RecordModel(time: time, userId: _selectedEmployee!.id, imageId: imageId, startTime: DateFormat('yyyy-MM-dd HH:mm').format(startTime!), endTime: DateFormat('yyyy-MM-dd HH:mm').format(endTime!));
     // await RecordManager.addNewRecord(model);
     widget.onSave(model);
